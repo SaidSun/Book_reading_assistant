@@ -1,17 +1,26 @@
 import requests
+import HTTPClientRequests
 
-SERVER_URL = "http://127.0.0.1:8000"
+module_list = HTTPClientRequests.GET_Modules()
+if not(module_list is None):
+    print("Выберите модель для конвертации аудио:\n")
+    for i, name in enumerate(module_list):
+        print(f"{i+1}. {name};\n")
+    print(f"{i+2}. Отменить\n")
 
-file_path = "example.txt"
-# with open(file_path, "w") as f:
-    # f.write("Hello, there!")
+while True:
+    try:
+        answer = input()
+        if not(answer == f"{i+2}"):
+            tts = module_list[int(answer)-1]
+            print(tts)
+        else:
+            tts = None
+        break
+    except:
+        print("Введите номер одного из представленных вариантов!")
 
-with open(file_path, "rb") as f:
-    files = {"file": (file_path, f)}
-    response =requests.post(f"{SERVER_URL}/upload", files=files)
+if not(tts is None):
+    print(HTTPClientRequests.POST_Modules(tts))
 
-print(response.json())
-
-response = requests.get(f"{SERVER_URL}/download/example")
-with open("downloaded_file.txt", "wb") as f:
-    f.write(response.content)
+    print(HTTPClientRequests.GET_audio("example"))
