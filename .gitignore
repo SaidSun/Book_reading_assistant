@@ -1,0 +1,9 @@
+__pycache__/
+download/
+upload/
+model/
+/*.wav
+example.txt
+test_get_classes.py
+Table_conf
+*.save
