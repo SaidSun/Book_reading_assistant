@@ -1,12 +1,13 @@
 from sqlalchemy import create_engine, Column, Integer, String, Time, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import text
 from sqlalchemy.ext.declarative import declarative_base
+import pandas as pd
+from typing import List
 
 
 class __SQLConstants:
     __BASE = declarative_base()
-
-
 
 class Model_table(__SQLConstants.__BASE):
     __tablename__ = "ModelsTable"
@@ -56,30 +57,57 @@ class Bookworm:
     def __init__(self, logi="superbookreader_user", passw="D73e55g6t08ru!", db="books_db"):
         self.__DATABASE_URL = f"postgresql://{logi}:{passw}!@localhost/{db}"
         self.__ENGINE = create_engine(self.__DATABASE_URL, echo=True)
-        
+        self.Server_view_query= f""" CREATE VIEW Server_Data AS SELECT AuthorTable.Author as Author, AuthorTable.BookName as BookName,
+          ModelsTable.Name as ModelName, 
+          GeneralTable.Time as Time from GeneralTable
+          JOIN AuthorTable ON GeneralTable.id == AuthorTable.id
+          JOIN ModelsTable ON GeneralTable.id == ModelsTable.id
+        """
+        self.User_view_query = f""" CREATE VIEW User_Data AS SELECT AuthorTable.Author as Author, AuthorTable.BookName as BookName,
+          ModelsTable.Name as ModelName, 
+          UserTable.Time as Time from UserTable
+          JOIN AuthorTable ON UserTable.id == AuthorTable.id
+          JOIN ModelsTable ON UserTable.id == ModelsTable.id
+        """
 
     def make_db(self) -> None:
         __SQLConstants.__BASE.metadata.create_all(self.__ENGINE)
     
-    def AllBooksList(self):
-        '''
-        Возвращает весь список книг, доступный на сервере
-        '''
-        pass
+    def make_view(self, query):
+        with self.__ENGINE.connect() as conn:
+            result = conn.execute(text(query))
+        return True
     
-    def UserBooksList(self):
+    def BooksList(self, origin: str):
         '''
-        Возвращяет список книг, прочитанных/в процессе чтения пользователем
+        Возвращает весь список книг, доступный на сервере или на стороне клиента
         '''
-        pass
+        with self.__ENGINE.connect() as conn:
+            result = conn.execute(text(f"SELECT * FROM {origin}"))
+        return result
 
-    def SearchBookServer(self, arg, query):
+    def SearchBookServer(self, query: str):
         '''
         Возвращает список книг по определенному запросу
         '''
-        pass
-
+        with self.__ENGINE.connect() as conn:
+            result = conn.execute(text(query))
+        return result
     
+    def req_sub(result):
+        """
+        Представляет результат запроса в виде таблицы Pandas
+        """
+        rows = result.fetchall()
+        columns_names = result.keys()
+
+        df = pd.DataFrame(rows, columns=columns_names)
+        
+        return df, rows, columns_names
+
+        
+
+
 
 
  
